@@ -5,11 +5,11 @@ on:
     tags:
       -v*
   push:
-    branches:
-      - main
+    # branches:
+    #   - main
   pull_request:
-    branches:
-      - main
+    # branches:
+    #   - main
 
 jobs:
   test:
@@ -22,20 +22,30 @@ jobs:
             os: ubuntu-latest
             compiler: gcc
             gcov_executable: gcov
+            cmake_generator: Ninja
 
           - name: Linux Clang
             os: ubuntu-latest
             compiler: llvm
             gcov_executable: "llvm-cov gcov"
+            cmake_generator: Ninja
 
           - name: MacOS clang
             os: macos-latest
             compiler: llvm
             gcov_executable: "llvm-cov gcov"
+            cmake_generator: Ninja
 
           - name: Windows MSVC
             os: windows-latest
             compiler: cl
+            cmake_generator: "Visual Studio 17 2022"
+
+          - name: Windows Clang
+            os: windows-latest
+            compiler: llvm
+            cmake_generator: "Ninja"
+            cmake_args: "-DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -64,6 +74,8 @@ jobs:
         run: >
           cmake -S .
           -B ./build
+          -G "${{ matrix.cmake_generator }}"
+          ${{ matrix.cmake_args }}
           -DCMAKE_BUILD_TYPE:STRING=Debug
           -DCMAKE_BUILD_PARALLEL_LEVEL=${{ steps.cpu-cores.outputs.count }}
           -DFTXUI_ENABLE_COVERAGE:BOOL=ON
